@@ -25,6 +25,7 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 
 	protected := h.authMW
 
+	mux.Handle("GET /logout", protected(http.HandlerFunc(h.Logout)))
 	mux.Handle("GET /", protected(http.HandlerFunc(h.Home)))
 }
 
@@ -36,17 +37,39 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.authService.Login(r.Context(), req.Email, req.Password)
+	accessToken, refreshToken, err := h.authService.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
-		http.Error(w, "Incorrect login credentials", http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 	helpers.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
 		"message": "Login successful",
-		"data":    user,
+		"tokens": map[string]string{
+			"access_token":  accessToken,
+			"refresh_token": refreshToken,
+		},
 	})
 }
 
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	accessToken := r.Context().Value("access_token").(string)
+	cookie, err := r.Cookie("refresh_token")
+
+	if err != nil {
+		cookie = &http.Cookie{}
+	}
+
+	refreshToken := cookie.Value
+
+	if err := h.authService.Logout(r.Context(), accessToken, refreshToken); err != nil {
+		http.Error(w, "Failed to logout: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	helpers.RespondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"message": "Logout successful",
+	})
+}
 func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	var req user.RegParams
 

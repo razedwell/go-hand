@@ -24,10 +24,14 @@ func NewService(users user.Repository, jwt *security.JWTManager) *Service {
 	return &Service{users, jwt}
 }
 
-func (s *Service) Login(ctx context.Context, email string, password string) (string, error) {
+func (s *Service) Login(ctx context.Context, email string, password string) (string, string, error) {
 	user, err := s.users.FindUserByEmail(ctx, email)
 	if err != nil || security.VerifyPassword(user.PasswordHash, password) == false {
-		return "", errUnauthorized
+		return "", "", errUnauthorized
 	}
-	return s.jwt.Generate(user.ID)
+	return s.jwt.GenerateTokenPair(user.ID, string(user.Role))
+}
+
+func (s *Service) Logout(ctx context.Context, accessToken string, refreshToken string) error {
+	return s.jwt.BlacklistTokens(ctx, accessToken, refreshToken)
 }

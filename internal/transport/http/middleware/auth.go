@@ -10,7 +10,7 @@ import (
 
 type contextKey string
 
-const userIDKey contextKey = "user_id"
+const acsKey contextKey = "access_token"
 
 func Auth(jwt *security.JWTManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -20,12 +20,20 @@ func Auth(jwt *security.JWTManager) func(http.Handler) http.Handler {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
-			claims, err := jwt.Verify(strings.TrimPrefix(h, "Bearer "))
+			tokenStr := strings.TrimPrefix(h, "Bearer ")
+
+			if jwt.IsBlacklisted(r.Context(), tokenStr) {
+				http.Error(w, "token revoked", http.StatusUnauthorized)
+				return
+			}
+
+			claims, err := jwt.Verify(tokenStr)
 			if err != nil {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
-			ctx := context.WithValue(r.Context(), userIDKey, claims.Subject)
+			ctx := context.WithValue(r.Context(), acsKey, tokenStr)
+			ctx = context.WithValue(ctx, "jwt_claims", claims)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

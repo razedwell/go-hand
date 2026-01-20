@@ -9,15 +9,17 @@ import (
 	"time"
 
 	"github.com/razedwell/go-hand/internal/config"
+	"github.com/razedwell/go-hand/internal/platform/cache"
+	"github.com/razedwell/go-hand/internal/platform/db"
 	"github.com/razedwell/go-hand/internal/platform/logger"
-	"github.com/razedwell/go-hand/internal/platform/postgres"
-	pgrepo "github.com/razedwell/go-hand/internal/postgres"
+	"github.com/razedwell/go-hand/internal/postgres"
 	"github.com/razedwell/go-hand/internal/security"
 	authsrvc "github.com/razedwell/go-hand/internal/service/auth"
 	"github.com/razedwell/go-hand/internal/service/user"
 	transporthttp "github.com/razedwell/go-hand/internal/transport/http"
 	"github.com/razedwell/go-hand/internal/transport/http/handler/auth"
 	"github.com/razedwell/go-hand/internal/transport/http/middleware"
+	"github.com/redis/go-redis/v9"
 )
 
 // var mockHash, _ = bcrypt.GenerateFromPassword([]byte("<PASSWORD>"), bcrypt.DefaultCost)
@@ -48,16 +50,25 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	dbUrl := postgres.BuildDBUrl(cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBSSLMode)
-	db, err := postgres.NewClient(dbUrl)
+	dbUrl := db.BuildDBUrl(cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBSSLMode, cfg.Timezone)
+	db, err := db.NewClient(dbUrl)
 	if err != nil {
 		logger.Log.Printf("Failed to connect to database: %s", err)
 	}
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     cfg.RedisAddr,
+		Password: cfg.RedisPassword,
+		DB:       int(cfg.RedisDB),
+	})
 
-	jwtManager := security.NewJWTManager(cfg.JWTSecret, time.Minute*15)
+	rdb := &cache.RedisClient{Client: redisClient}
+
+	tokenRepo := postgres.NewTokenRepo(db)
+
+	jwtManager := security.NewJWTManager(cfg.JWTAccessSecret, cfg.JWTRefreshSecret, time.Minute*15, time.Hour*24, tokenRepo, rdb)
 	authMW := middleware.Auth(jwtManager)
 
-	userRepo := pgrepo.NewUserRepo(db)
+	userRepo := postgres.NewUserRepo(db)
 	userService := user.NewService(userRepo)
 	authService := authsrvc.NewService(userRepo, jwtManager)
 	authHandler := auth.NewHandler(userService, authService, authMW)

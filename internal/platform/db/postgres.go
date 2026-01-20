@@ -1,4 +1,4 @@
-package postgres
+package db
 
 import (
 	"database/sql"
@@ -8,8 +8,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func BuildDBUrl(user, password, host, port, dbname, sslmode string) string {
-	return "postgres://" + user + ":" + password + "@" + host + ":" + port + "/" + dbname + "?sslmode=" + sslmode
+func BuildDBUrl(user, password, host, port, dbname, sslmode, timezone string) string {
+	return "postgres://" + user + ":" + password + "@" + host + ":" + port + "/" + dbname + "?sslmode=" + sslmode + "&timezone=" + timezone
 }
 
 func NewClient(url string) (*sql.DB, error) {
