@@ -1,8 +1,13 @@
 package user
 
-import "github.com/razedwell/go-hand/internal/model"
+import (
+	"context"
+
+	"github.com/razedwell/go-hand/internal/model"
+)
 
 type Repository interface {
-	FindUserByEmail(email string) (*model.User, error)
-	FindUserById(id int64) (*model.User, error)
+	FindUserByEmail(ctx context.Context, email string) (*model.User, error)
+	FindUserById(ctx context.Context, id int64) (*model.User, error)
+	CreateUser(ctx context.Context, user *model.User) error
 }
