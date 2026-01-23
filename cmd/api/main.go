@@ -22,28 +22,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// var mockHash, _ = bcrypt.GenerateFromPassword([]byte("<PASSWORD>"), bcrypt.DefaultCost)
-
-// // mockUserRepo implements the repository interface expected by the service
-// type mockUserRepo struct{}
-
-// func (m *mockUserRepo) FindUserByEmail(ctx context.Context, email string) (*model.User, error) {
-// 	if email == "<EMAIL>" {
-// 		return &model.User{
-// 			ID:           1,
-// 			Email:        "<EMAIL>",
-// 			PasswordHash: string(mockHash),
-// 			FirstName:    "John",
-// 			LastName:     "Doe",
-// 		}, nil
-// 	}
-// 	return nil, errors.New("user not found")
-// }
-
-// func (m *mockUserRepo) FindUserById(ctx context.Context, id int64) (*model.User, error) {
-// 	return nil, errors.New("user not found")
-// }
-
 func main() {
 	logger.Init()
 	cfg := config.LoadConfig()
@@ -65,7 +43,7 @@ func main() {
 
 	tokenRepo := postgres.NewTokenRepo(db)
 
-	jwtManager := security.NewJWTManager(cfg.JWTAccessSecret, cfg.JWTRefreshSecret, time.Minute*15, time.Hour*24, tokenRepo, rdb)
+	jwtManager := security.NewJWTManager(cfg.JWTAccessSecret, cfg.JWTRefreshSecret, time.Minute*time.Duration(cfg.JWTAccessExpiryMinutes), time.Hour*time.Duration(cfg.JWTRefreshExpiryHours), tokenRepo, rdb)
 	authMW := middleware.Auth(jwtManager)
 
 	userRepo := postgres.NewUserRepo(db)

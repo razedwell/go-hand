@@ -35,3 +35,7 @@ func (s *Service) Login(ctx context.Context, email string, password string) (str
 func (s *Service) Logout(ctx context.Context, accessToken string, refreshToken string) error {
 	return s.jwt.BlacklistTokens(ctx, accessToken, refreshToken)
 }
+
+func (s *Service) RefreshAccessToken(ctx context.Context, refreshTokenStr string) (string, error) {
+	return s.jwt.RefreshAccessToken(ctx, refreshTokenStr)
+}

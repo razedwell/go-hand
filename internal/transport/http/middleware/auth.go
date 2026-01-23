@@ -8,9 +8,9 @@ import (
 	"github.com/razedwell/go-hand/internal/security"
 )
 
-type contextKey string
+type ctxKey string
 
-const acsKey contextKey = "access_token"
+const AcsKey ctxKey = "access_token"
 
 func Auth(jwt *security.JWTManager) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -27,13 +27,12 @@ func Auth(jwt *security.JWTManager) func(http.Handler) http.Handler {
 				return
 			}
 
-			claims, err := jwt.Verify(tokenStr)
+			_, err := jwt.Verify(tokenStr)
 			if err != nil {
 				http.Error(w, "unauthorized", http.StatusUnauthorized)
 				return
 			}
-			ctx := context.WithValue(r.Context(), acsKey, tokenStr)
-			ctx = context.WithValue(ctx, "jwt_claims", claims)
+			ctx := context.WithValue(r.Context(), AcsKey, tokenStr)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/razedwell/go-hand/internal/model"
 	"github.com/razedwell/go-hand/internal/platform/cache"
+	"github.com/razedwell/go-hand/internal/platform/logger"
 	"github.com/razedwell/go-hand/internal/repository/token"
 	"github.com/razedwell/go-hand/internal/transport/http/helpers"
 )
@@ -154,9 +155,15 @@ func (j *JWTManager) BlacklistTokens(ctx context.Context, accessTokenStr string,
 		claims := accessToken.Claims.(*JWTClaims)
 		expiry := claims.ExpiresAt.Time.Sub(helpers.GetCurrentTimeStampUTC())
 		j.redis.Client.Set(ctx, accessTokenStr, "blacklisted", expiry)
+	} else {
+		logger.Log.Printf("Failed to parse access token for blacklisting: %v", err)
 	}
 
 	// Revoke Refresh Token in DB
 	hash := j.hashToken(refreshTokenStr)
-	return j.repo.RevokeRefreshToken(ctx, hash)
+	err = j.repo.RevokeRefreshToken(ctx, hash)
+	if err != nil {
+		logger.Log.Printf("Failed to revoke refresh token: %v", err)
+	}
+	return err
 }
