@@ -2,7 +2,7 @@
 
 A robust backend service implemented in Go, following **Clean Architecture** principles. This project provides a secure foundation for user authentication and session management using PostgreSQL and Redis.
 
-## 🚀 Features
+## Features
 
 - **Clean Architecture**: Clear separation of concerns into API, Service, Repository, and Domain layers.
 - **Authentication**: Secure JWT-based authentication (Access & Refresh Tokens).
@@ -11,7 +11,7 @@ A robust backend service implemented in Go, following **Clean Architecture** pri
 - **Security**: Password hashing using `bcrypt`.
 - **Standard Library**: Built using Go's standard `net/http` `ServeMux` for routing.
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Language**: Go
 - **Database**: PostgreSQL (`lib/pq`)
@@ -19,7 +19,7 @@ A robust backend service implemented in Go, following **Clean Architecture** pri
 - **Auth**: JWT (`golang-jwt/jwt/v5`)
 - **Config**: `godotenv`
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 ├── cmd/api          # Main entry point (main.go)
@@ -37,7 +37,7 @@ A robust backend service implemented in Go, following **Clean Architecture** pri
 └── go.mod           # Dependencies
 ```
 
-## ⚙️ Setup & Installation
+## Setup & Installation
 
 ### Prerequisites
 - Go 1.22+
@@ -77,18 +77,18 @@ The server will start on the port specified in your `.env` (default is usually `
 ### Authentication
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/register` | Register a new user | ❌ |
-| `POST` | `/login` | Login and receive tokens | ❌ |
-| `POST` | `/refresh` | Refresh access token (requires cookie) | ❌ |
-| `GET` | `/logout` | Invalidate session | ✅ |
+| `POST` | `/register` | Register a new user | ✗ |
+| `POST` | `/login` | Login and receive tokens | ✗ |
+| `POST` | `/refresh` | Refresh access token (requires cookie) | ✗ |
+| `GET` | `/logout` | Invalidate session | ✓ |
 
 ### General
 | Method | Endpoint | Description | Auth Required |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/` | Protected home route | ✅ |
-| `GET` | `/test` | Serves a test HTML page | ❌ |
+| `GET` | `/` | Protected home route | ✓ |
+| `GET` | `/test` | Serves a test HTML page | ✗ |
 
-## 🧪 Testing
+## Testing
 
 You can test the endpoints using the provided `/test` page or tools like curl/Postman.
 
@@ -97,6 +97,6 @@ You can test the endpoints using the provided `/test` page or tools like curl/Po
 curl -H "Authorization: Bearer <your_token>" http://localhost:8080/
 ```
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License.
